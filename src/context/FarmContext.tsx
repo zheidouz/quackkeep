@@ -21,7 +21,7 @@ interface FarmContextValue {
   resetState: () => Promise<void>;
   addTransaction: (t: Transaction) => void;
   deleteTransaction: (id: string) => void;
-  processLogEvent: (type: LogEventType, qty: number, desc: string, feedPricePerKg?: number, duckSellPrice?: number) => string | null;
+  processLogEvent: (type: LogEventType, qty: number, desc: string, feedPricePerKg?: number, duckSellPrice?: number, infertileCount?: number) => string | null;
 }
 
 const FarmContext = createContext<FarmContextValue | null>(null);
@@ -76,7 +76,7 @@ export function FarmProvider({ children }: { children: ReactNode }) {
   );
 
   const processLogEvent = useCallback(
-    (type: LogEventType, qty: number, desc: string, feedPricePerKg?: number, duckSellPrice?: number): string | null => {
+    (type: LogEventType, qty: number, desc: string, feedPricePerKg?: number, duckSellPrice?: number, infertileCount?: number): string | null => {
       if (qty <= 0) return 'Please enter a valid quantity.';
 
       let message: string | null = null;
@@ -132,9 +132,20 @@ export function FarmProvider({ children }: { children: ReactNode }) {
             break;
           }
           case 'duck-hatch': {
+            const infertile = infertileCount ?? 0;
+            const totalEggsUsed = qty + infertile;
+            if (totalEggsUsed > next.eggsOnHand) {
+              message = `Error: Not enough eggs! Need ${totalEggsUsed}, have ${next.eggsOnHand}.`;
+              return prev;
+            }
+            next.eggsOnHand -= totalEggsUsed;
             next.ducksCount += qty;
             transaction = null;
-            message = `Hatched +${qty} ducks`;
+            if (infertile > 0) {
+              message = `Hatched +${qty} ducks (${infertile} infertile eggs discarded)`;
+            } else {
+              message = `Hatched +${qty} ducks`;
+            }
             break;
           }
           case 'duck-sell': {

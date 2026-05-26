@@ -32,6 +32,7 @@ export default function LogModal({ open, onClose }: Props) {
   const [qty, setQty] = useState(1);
   const [desc, setDesc] = useState('');
   const [unitPrice, setUnitPrice] = useState(0);
+  const [infertileCount, setInfertileCount] = useState(0);
 
   // Sync dialog open state
   useEffect(() => {
@@ -42,6 +43,7 @@ export default function LogModal({ open, onClose }: Props) {
       setQty(1);
       setDesc('');
       setUnitPrice(0);
+      setInfertileCount(0);
       setEventType('egg-collect');
     } else if (!open && el.open) {
       el.close();
@@ -59,6 +61,7 @@ export default function LogModal({ open, onClose }: Props) {
     setEventType(type);
     setQty(1);
     setUnitPrice(0);
+    setInfertileCount(0);
   };
 
   const adjustQty = (amount: number) => {
@@ -70,7 +73,7 @@ export default function LogModal({ open, onClose }: Props) {
       case 'egg-collect': return 'Number of eggs collected';
       case 'egg-sell': return 'Number of eggs sold';
       case 'duck-buy': return 'Number of ducks bought';
-      case 'duck-hatch': return 'Number of ducks hatched';
+      case 'duck-hatch': return 'Number of ducklings hatched';
       case 'duck-sell': return 'Number of ducks sold';
       case 'duck-lost': return 'Number of ducks died/lost';
       case 'feed-buy': return 'Weight of Feed purchased (kg)';
@@ -98,7 +101,7 @@ export default function LogModal({ open, onClose }: Props) {
       return;
     }
 
-    const result = processLogEvent(eventType, qty, desc, unitPrice, unitPrice);
+    const result = processLogEvent(eventType, qty, desc, unitPrice, unitPrice, infertileCount);
     if (result) {
       showToast(result);
       onClose();
@@ -182,6 +185,29 @@ export default function LogModal({ open, onClose }: Props) {
             </button>
           </div>
         </div>
+
+        {/* Infertile eggs — shown when hatching */}
+        {eventType === 'duck-hatch' && (
+          <div>
+            <label htmlFor="log-infertile" className="block text-xs font-bold mb-1 text-homestead-green/80">
+              Infertile eggs discarded
+            </label>
+            <input
+              id="log-infertile"
+              type="number"
+              min={0}
+              step={1}
+              inputMode="numeric"
+              value={infertileCount}
+              onChange={(e) => setInfertileCount(Math.max(0, parseInt(e.target.value) || 0))}
+              placeholder="e.g. 3"
+              className="w-full bg-white border border-homestead-green rounded-lg px-3 py-2 text-sm font-bold"
+            />
+            <p className="text-[10px] text-homestead-green/60 mt-1">
+              Eggs used = ducklings hatched + infertile discarded
+            </p>
+          </div>
+        )}
 
         {/* Unit Price — shown when buying/selling */}
         {(eventType === 'feed-buy' || eventType === 'duck-sell' || eventType === 'duck-buy') && (
