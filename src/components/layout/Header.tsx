@@ -1,7 +1,9 @@
 import { useToast } from '../../context/ToastContext';
+import { useFarm } from '../../context/FarmContext';
 
 export default function Header() {
   const { message } = useToast();
+  const { error } = useFarm();
 
   return (
     <header className="sticky top-0 bg-homestead-green text-homestead-beige border-b border-homestead-green px-4 py-3 shadow-md flex items-center justify-between z-40">
@@ -14,9 +16,12 @@ export default function Header() {
       <div
         role="status"
         aria-live="polite"
-        className={`text-sm bg-homestead-terracotta text-white px-3 py-1 rounded-md border border-white max-w-[200px] truncate transition-opacity duration-300 ${message ? 'opacity-100' : 'opacity-0'}`}
+        className={`text-sm px-3 py-1 rounded-md border border-white max-w-[200px] truncate transition-opacity duration-300 ${
+          error ? 'bg-red-700 text-white opacity-100' :
+          message ? 'bg-homestead-terracotta text-white opacity-100' : 'bg-homestead-terracotta text-white opacity-0'
+        }`}
       >
-        {message || 'Ready'}
+        {error || message || 'Ready'}
       </div>
     </header>
   );

@@ -3,6 +3,11 @@ import FarmState from '../models/FarmState.js';
 
 const router = Router();
 
+// GET /api/health — health check
+router.get('/health', (_req: Request, res: Response) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // GET /api/farm — fetch the single farm document
 router.get('/', async (_req: Request, res: Response) => {
   try {

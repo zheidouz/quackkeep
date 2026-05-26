@@ -45,6 +45,8 @@ export default function LogModal({ open, onClose }: Props) {
     } else if (!open && el.open) {
       el.close();
     }
+    // Cleanup on unmount
+    return () => { if (el?.open) el.close(); };
   }, [open]);
 
   // Close on backdrop click
@@ -129,7 +131,12 @@ export default function LogModal({ open, onClose }: Props) {
           <select
             id="log-type"
             value={eventType}
-            onChange={(e) => handleTypeChange(e.target.value as LogEventType)}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (EVENT_OPTIONS.some((o) => o.value === val)) {
+                handleTypeChange(val as LogEventType);
+              }
+            }}
             className="w-full bg-white border border-homestead-green rounded-lg p-2.5 text-sm font-bold"
           >
             {EVENT_OPTIONS.map((opt) => (
@@ -156,10 +163,10 @@ export default function LogModal({ open, onClose }: Props) {
               id="log-qty"
               type="number"
               min={1}
-              step="any"
-              inputMode="decimal"
+              step={1}
+              inputMode="numeric"
               value={qty}
-              onChange={(e) => setQty(parseFloat(e.target.value) || 0)}
+              onChange={(e) => setQty(Math.max(1, parseInt(e.target.value) || 0))}
               className="flex-1 text-center h-12 bg-white border border-homestead-green rounded-lg text-lg font-bold"
               required
             />
@@ -187,7 +194,7 @@ export default function LogModal({ open, onClose }: Props) {
               step={1}
               inputMode="numeric"
               value={unitPrice}
-              onChange={(e) => setUnitPrice(parseInt(e.target.value) || 0)}
+              onChange={(e) => setUnitPrice(Math.max(1, parseInt(e.target.value) || 0))}
               placeholder={eventType === 'feed-buy' ? 'e.g. 85' : 'e.g. 500'}
               className="w-full bg-white border border-homestead-green rounded-lg px-3 py-2 text-sm font-bold"
               required

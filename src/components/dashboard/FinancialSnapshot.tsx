@@ -37,8 +37,8 @@ export default function FinancialSnapshot() {
         <span
           className={`text-xl font-black px-3 py-1 rounded-lg border ${
             netBalance >= 0
-              ? 'bg-[#E3EFE5] text-[#1A3A2B] border-homestead-green'
-              : 'bg-[#FCECE8] text-[#C86446] border-homestead-terracotta'
+              ? 'bg-homestead-light-green text-homestead-green border-homestead-green'
+              : 'bg-homestead-light-terracotta text-homestead-terracotta border-homestead-terracotta'
           }`}
         >
           {netBalance >= 0 ? '+' : ''}₱{netBalance.toFixed(2)}

@@ -35,7 +35,7 @@ export function FarmProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     fetchFarmState()
       .then((data) => setState(data))
-      .catch((err) => setError(err.message))
+      .catch((err) => setError(err instanceof Error ? err.message : String(err)))
       .finally(() => setLoading(false));
   }, []);
 
@@ -43,7 +43,7 @@ export function FarmProvider({ children }: { children: ReactNode }) {
   const updateAndSave = useCallback((updater: (prev: FarmState) => FarmState) => {
     setState((prev) => {
       const next = updater(prev);
-      saveFarmState(next).catch((err) => setError(err.message));
+      saveFarmState(next).catch((err) => setError(err instanceof Error ? err.message : String(err)));
       return next;
     });
   }, []);
@@ -57,8 +57,8 @@ export function FarmProvider({ children }: { children: ReactNode }) {
     try {
       const fresh = await resetFarmStateApi();
       setState(fresh);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     }
   }, []);
 
@@ -84,7 +84,7 @@ export function FarmProvider({ children }: { children: ReactNode }) {
       updateAndSave((prev) => {
         let next = { ...prev };
         let transaction: Transaction | null = {
-          id: 'trans-' + Date.now(),
+          id: crypto.randomUUID(),
           date: new Date().toISOString(),
           type: 'expense',
           amount: 0,
@@ -107,7 +107,7 @@ export function FarmProvider({ children }: { children: ReactNode }) {
             next.eggsOnHand -= qty;
             next.totalEggsSold += qty;
             transaction = {
-              id: 'trans-' + Date.now(),
+              id: crypto.randomUUID(),
               date: new Date().toISOString(),
               type: 'revenue',
               amount: qty * prev.eggDefaultSalePrice,
@@ -131,7 +131,7 @@ export function FarmProvider({ children }: { children: ReactNode }) {
             const duckPrice = duckSellPrice ?? prev.duckDefaultSalePrice;
             next.ducksCount -= qty;
             transaction = {
-              id: 'trans-' + Date.now(),
+              id: crypto.randomUUID(),
               date: new Date().toISOString(),
               type: 'revenue',
               amount: qty * duckPrice,
@@ -155,7 +155,7 @@ export function FarmProvider({ children }: { children: ReactNode }) {
             const price = feedPricePerKg ?? 0;
             next.feedKgRemaining += qty;
             transaction = {
-              id: 'trans-' + Date.now(),
+              id: crypto.randomUUID(),
               date: new Date().toISOString(),
               type: 'expense',
               amount: qty * price,
@@ -177,7 +177,7 @@ export function FarmProvider({ children }: { children: ReactNode }) {
           }
           case 'expense-labor': {
             transaction = {
-              id: 'trans-' + Date.now(),
+              id: crypto.randomUUID(),
               date: new Date().toISOString(),
               type: 'expense',
               amount: qty,
@@ -189,7 +189,7 @@ export function FarmProvider({ children }: { children: ReactNode }) {
           }
           case 'expense-med': {
             transaction = {
-              id: 'trans-' + Date.now(),
+              id: crypto.randomUUID(),
               date: new Date().toISOString(),
               type: 'expense',
               amount: qty,
@@ -201,7 +201,7 @@ export function FarmProvider({ children }: { children: ReactNode }) {
           }
           case 'expense-transport': {
             transaction = {
-              id: 'trans-' + Date.now(),
+              id: crypto.randomUUID(),
               date: new Date().toISOString(),
               type: 'expense',
               amount: qty,
@@ -213,7 +213,7 @@ export function FarmProvider({ children }: { children: ReactNode }) {
           }
           case 'expense-misc': {
             transaction = {
-              id: 'trans-' + Date.now(),
+              id: crypto.randomUUID(),
               date: new Date().toISOString(),
               type: 'expense',
               amount: qty,

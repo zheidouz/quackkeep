@@ -14,10 +14,10 @@ export default function Milestones() {
 
   const insights: string[] = [];
   if (state.ducksCount > 0) {
-    insights.push(`Your flock consumes about <b>${dailyRate.toFixed(1)} kg</b> of feed every single day.`);
+    insights.push(`Your flock consumes about ${dailyRate.toFixed(1)} kg of feed every single day.`);
   }
   if (state.eggsOnHand > 50) {
-    insights.push(`🥚 Stock surplus! You have <b>${state.eggsOnHand} eggs</b> on hand ready for sale.`);
+    insights.push(`🥚 Stock surplus! You have ${state.eggsOnHand} eggs on hand ready for sale.`);
   }
   if (netBalance > 100) {
     insights.push(`📈 Financial milestone: Net profit is positive. Your homestead is solvent!`);
@@ -27,7 +27,7 @@ export default function Milestones() {
   if (state.ducksCount < 10) {
     insights.push(`🏡 Small scale operation active. Perfect size for local direct consumer sales.`);
   } else {
-    insights.push(`🎉 Vibrant Farm: <b>${state.ducksCount} ducks</b> driving organic fertilizer and pest removal.`);
+    insights.push(`🎉 Vibrant Farm: ${state.ducksCount} ducks driving organic fertilizer and pest removal.`);
   }
 
   return (
@@ -39,7 +39,7 @@ export default function Milestones() {
         {insights.map((item, i) => (
           <li key={i} className="flex items-start space-x-2">
             <span>▶</span>
-            <span dangerouslySetInnerHTML={{ __html: item }} />
+            <span>{item}</span>
           </li>
         ))}
       </ul>

@@ -20,7 +20,7 @@ export default function TransactionItem({ transaction, onDelete }: Props) {
           <span
             className={`text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-md ${
               isRev
-                ? 'bg-[#E3EFE5] text-[#1A3A2B]'
+                ? 'bg-homestead-light-green text-homestead-green'
                 : 'bg-homestead-beige border border-homestead-green/30'
             }`}
           >

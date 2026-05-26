@@ -34,7 +34,7 @@ export default function FeedPredictor() {
     <article
       className={`rounded-2xl p-5 border-2 shadow-[4px_4px_0px_0px_rgba(26,58,43,1)] transition-colors duration-300 ${
         isLow
-          ? 'bg-[#FCECE8] border-homestead-terracotta text-homestead-terracotta'
+          ? 'bg-homestead-light-terracotta border-homestead-terracotta text-homestead-terracotta'
           : 'bg-white border-homestead-green text-homestead-green'
       }`}
     >
