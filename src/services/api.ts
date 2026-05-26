@@ -1,6 +1,6 @@
 import type { FarmState } from '../types';
 
-const API_BASE = '/api/farm';
+const API_BASE = '/_/backend/api/farm';
 
 export async function fetchFarmState(): Promise<FarmState> {
   const res = await fetch(API_BASE);
