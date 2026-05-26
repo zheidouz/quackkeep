@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@theme {
+  --color-homestead-beige: #F5F2EB;
+  --color-homestead-green: #1A3A2B;
+  --color-homestead-terracotta: #C86446;
+  --color-homestead-wood: #2E251B;
+  --color-homestead-cardBg: #FFFFFF;
+  --font-family-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Prevent default web scroll bounces on iOS to mimic native mobile feel */
+html, body {
+  background-color: #F5F2EB;
+  overscroll-behavior-y: contain;
+}
+
+/* Custom input outline focus styles matching Forest Green */
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid #1A3A2B;
+  outline-offset: 1px;
+}
+
+/* Hide scrollbars for bottom nav filter bars while keeping scroll functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
