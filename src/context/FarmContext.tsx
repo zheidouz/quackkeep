@@ -117,10 +117,24 @@ export function FarmProvider({ children }: { children: ReactNode }) {
             message = `Sold +${qty} Eggs for ₱${transaction.amount.toFixed(2)}`;
             break;
           }
-          case 'duck-add': {
+          case 'duck-buy': {
+            const buyPrice = duckSellPrice ?? 0;
+            next.ducksCount += qty;
+            transaction = {
+              id: crypto.randomUUID(),
+              date: new Date().toISOString(),
+              type: 'expense',
+              amount: qty * buyPrice,
+              category: 'Misc Expenses',
+              description: desc || `Bought ${qty} ducks @ ₱${buyPrice}/duck`,
+            };
+            message = `Bought +${qty} Ducks for ₱${(qty * buyPrice).toFixed(2)}`;
+            break;
+          }
+          case 'duck-hatch': {
             next.ducksCount += qty;
             transaction = null;
-            message = `Flock increased +${qty} ducks`;
+            message = `Hatched +${qty} ducks`;
             break;
           }
           case 'duck-sell': {

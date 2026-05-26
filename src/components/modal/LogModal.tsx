@@ -11,7 +11,8 @@ interface Props {
 const EVENT_OPTIONS: { value: LogEventType; label: string }[] = [
   { value: 'egg-collect', label: '🥚 Collect Eggs' },
   { value: 'egg-sell', label: '💰 Sell Eggs' },
-  { value: 'duck-add', label: '🦆 Buy/Hatch Ducks' },
+  { value: 'duck-buy', label: '🦆 Buy Ducks' },
+  { value: 'duck-hatch', label: '🐣 Hatch Ducks' },
   { value: 'duck-sell', label: '💰 Sell Ducks' },
   { value: 'duck-lost', label: '💔 Ducks Died/Lost' },
   { value: 'feed-buy', label: '🌾 Purchase Feed Bags' },
@@ -68,7 +69,8 @@ export default function LogModal({ open, onClose }: Props) {
     switch (eventType) {
       case 'egg-collect': return 'Number of eggs collected';
       case 'egg-sell': return 'Number of eggs sold';
-      case 'duck-add': return 'Number of ducks added';
+      case 'duck-buy': return 'Number of ducks bought';
+      case 'duck-hatch': return 'Number of ducks hatched';
       case 'duck-sell': return 'Number of ducks sold';
       case 'duck-lost': return 'Number of ducks died/lost';
       case 'feed-buy': return 'Weight of Feed purchased (kg)';
@@ -90,7 +92,7 @@ export default function LogModal({ open, onClose }: Props) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if ((eventType === 'feed-buy' || eventType === 'duck-sell') && unitPrice <= 0) {
+    if ((eventType === 'feed-buy' || eventType === 'duck-sell' || eventType === 'duck-buy') && unitPrice <= 0) {
       const label = eventType === 'feed-buy' ? 'price per kg' : 'price per duck';
       showToast(`Please enter a valid ${label}.`);
       return;
@@ -181,8 +183,8 @@ export default function LogModal({ open, onClose }: Props) {
           </div>
         </div>
 
-        {/* Unit Price — shown when buying feed or selling ducks */}
-        {(eventType === 'feed-buy' || eventType === 'duck-sell') && (
+        {/* Unit Price — shown when buying/selling */}
+        {(eventType === 'feed-buy' || eventType === 'duck-sell' || eventType === 'duck-buy') && (
           <div>
             <label htmlFor="log-unit-price" className="block text-xs font-bold mb-1 text-homestead-green/80">
               {eventType === 'feed-buy' ? 'Price per kg (₱)' : 'Price per duck (₱)'}

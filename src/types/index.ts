@@ -23,7 +23,8 @@ export type ViewId = 'dashboard' | 'ledger' | 'recalibrate';
 export type LogEventType =
   | 'egg-collect'
   | 'egg-sell'
-  | 'duck-add'
+  | 'duck-buy'
+  | 'duck-hatch'
   | 'duck-sell'
   | 'duck-lost'
   | 'feed-buy'
