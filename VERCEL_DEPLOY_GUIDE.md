@@ -114,7 +114,7 @@ In the **Vercel Dashboard** → your project → **Settings** → **Environment 
 
 | Name | Value |
 |------|-------|
-| `MONGODB_URI` | `mongodb+srv://admin-paul:123aeulos@vibecode.yptehhi.mongodb.net/quackkeep?retryWrites=true&w=majority&appName=vibecode` |
+| `MONGODB_URI` | `mongodb+srv://<db_user>:<db_password>@<cluster>.mongodb.net/quackkeep?retryWrites=true&w=majority` |
 
 > ⚠️ Never commit this to your repository — only set it in Vercel's dashboard.
 
