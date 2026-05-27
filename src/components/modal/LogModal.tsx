@@ -87,7 +87,7 @@ export default function LogModal({ open, onClose }: Props) {
   const showPreview = isIncomeType || isExpenseType || eventType === 'feed-buy';
 
   let previewAmount = 0;
-  if (eventType === 'egg-sell') previewAmount = qty * state.eggDefaultSalePrice;
+  if (eventType === 'egg-sell') previewAmount = qty * (unitPrice || state.eggDefaultSalePrice);
   else if (eventType === 'duck-sell') previewAmount = qty * (unitPrice || state.duckDefaultSalePrice);
   else if (eventType === 'feed-buy') previewAmount = qty * unitPrice;
   else if (isExpenseType) previewAmount = qty;
@@ -210,22 +210,21 @@ export default function LogModal({ open, onClose }: Props) {
         )}
 
         {/* Unit Price — shown when buying/selling */}
-        {(eventType === 'feed-buy' || eventType === 'duck-sell' || eventType === 'duck-buy') && (
+        {(eventType === 'egg-sell' || eventType === 'feed-buy' || eventType === 'duck-sell' || eventType === 'duck-buy') && (
           <div>
             <label htmlFor="log-unit-price" className="block text-xs font-bold mb-1 text-homestead-green/80">
-              {eventType === 'feed-buy' ? 'Price per kg (₱)' : 'Price per duck (₱)'}
+              {eventType === 'egg-sell' ? 'Price per egg (₱) — leave 0 for default' : eventType === 'feed-buy' ? 'Price per kg (₱)' : 'Price per duck (₱)'}
             </label>
             <input
               id="log-unit-price"
               type="number"
-              min={1}
-              step={1}
-              inputMode="numeric"
+              min={0}
+              step={0.5}
+              inputMode="decimal"
               value={unitPrice}
-              onChange={(e) => setUnitPrice(Math.max(1, parseInt(e.target.value) || 0))}
-              placeholder={eventType === 'feed-buy' ? 'e.g. 85' : 'e.g. 500'}
+              onChange={(e) => setUnitPrice(Math.max(0, parseFloat(e.target.value) || 0))}
+              placeholder={eventType === 'egg-sell' ? `Default: ₱${state.eggDefaultSalePrice}` : eventType === 'feed-buy' ? 'e.g. 85' : 'e.g. 500'}
               className="w-full bg-white border border-homestead-green rounded-lg px-3 py-2 text-sm font-bold"
-              required
             />
           </div>
         )}
