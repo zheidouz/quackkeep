@@ -17,7 +17,7 @@ export default function AdminProfile() {
 
   useEffect(() => {
     fetchProfile()
-      .then(setProfile)
+      .then((data) => setProfile({ ...data, customFields: data.customFields || {} }))
       .catch(() => { /* ignore */ })
       .finally(() => setLoading(false));
   }, []);
@@ -143,7 +143,7 @@ export default function AdminProfile() {
           Add any extra info about your farm. The AI will see it as context.
         </p>
 
-        {Object.entries(profile.customFields).map(([key, value]) => (
+        {Object.entries(profile.customFields || {}).map(([key, value]) => (
           <div key={key} className="flex items-center gap-2 mb-2">
             <span className="text-xs font-bold text-homestead-green bg-homestead-beige/50 px-2 py-1.5 rounded-lg border border-homestead-green/30 min-w-[80px]">
               {key}
