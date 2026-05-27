@@ -80,9 +80,14 @@ function parseLogMessage(msg: string, _farm: unknown): LogEventData | null {
   const qty = parseInt(nums[0], 10);
   if (qty <= 0) return null;
 
-  // Extract price per unit if mentioned (e.g. "tig-15", "@ 15", "₱12 each", "sa halagang 15")
-  const priceMatch = msg.match(/(?:tig-|@\s*|sa halagang\s*|₱\s*|php\s*)(\d+)/i);
-  const unitPrice = priceMatch ? parseFloat(priceMatch[1]) : 0;
+  // Extract price: per-unit (e.g. "tig-15", "@ 15 each") or total (e.g. "for 100", "100 pesos total")
+  const perUnitMatch = msg.match(/(?:tig-|@\s*|₱\s*|php\s*)(\d+)\s*(?:each|per|bawat|kada)?/i);
+  const totalMatch = msg.match(/(?:for\s*|sa halagang\s*|total\s*|kabuuang\s*|halagang\s*)(\d+)/i);
+  let unitPrice = perUnitMatch ? parseFloat(perUnitMatch[1]) : 0;
+  // If no per-unit price but total price given, calculate per-unit
+  if (!unitPrice && totalMatch && qty > 0) {
+    unitPrice = parseFloat(totalMatch[1]) / qty;
+  }
 
   const desc = msg.trim();
   const infertileCount = 0;
