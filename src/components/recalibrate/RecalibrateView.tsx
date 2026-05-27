@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useFarm } from '../../context/FarmContext';
 import { useToast } from '../../context/ToastContext';
+import PinModal from '../modal/PinModal';
 
 export default function RecalibrateView() {
+  const [pinModalOpen, setPinModalOpen] = useState(false);
   const { state, updateState, resetState } = useFarm();
   const { showToast } = useToast();
 
@@ -178,6 +180,22 @@ export default function RecalibrateView() {
         </form>
       </article>
 
+      {/* PIN Settings */}
+      <article className="bg-white rounded-2xl p-5 border-2 border-homestead-green shadow-[4px_4px_0px_0px_rgba(26,58,43,1)] space-y-3">
+        <h3 className="text-xs font-black uppercase tracking-wider text-homestead-green opacity-75">
+          Security Settings
+        </h3>
+        <p className="text-xs text-homestead-green/70">
+          A PIN is required to access this page. Change it below.
+        </p>
+        <button
+          onClick={() => setPinModalOpen(true)}
+          className="w-full bg-homestead-green text-white text-xs font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-opacity-90 active:scale-95 transition-all cursor-pointer"
+        >
+          🔑 Change PIN
+        </button>
+      </article>
+
       {/* Reset */}
       <div className="p-2 text-center">
         <button
@@ -187,6 +205,13 @@ export default function RecalibrateView() {
           🚨 Reset application data to default
         </button>
       </div>
+
+      <PinModal
+        open={pinModalOpen}
+        mode="change"
+        onSuccess={() => { setPinModalOpen(false); showToast('PIN updated!'); }}
+        onClose={() => setPinModalOpen(false)}
+      />
     </section>
   );
 }

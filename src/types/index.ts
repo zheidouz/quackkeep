@@ -18,7 +18,14 @@ export interface FarmState {
   transactions: Transaction[];
 }
 
-export type ViewId = 'dashboard' | 'ledger' | 'recalibrate';
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  text: string;
+  timestamp: number;
+}
+
+export type ViewId = 'dashboard' | 'ledger' | 'recalibrate' | 'chat';
 
 export type LogEventType =
   | 'egg-collect'

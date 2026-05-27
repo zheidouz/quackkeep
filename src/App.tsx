@@ -1,15 +1,41 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import type { ViewId } from './types';
 import Header from './components/layout/Header';
 import BottomNav from './components/layout/BottomNav';
 import DashboardView from './components/dashboard/DashboardView';
 import LedgerView from './components/ledger/LedgerView';
 import RecalibrateView from './components/recalibrate/RecalibrateView';
+import ChatView from './components/chat/ChatView';
 import LogModal from './components/modal/LogModal';
+import PinModal from './components/modal/PinModal';
 
 function App() {
   const [activeView, setActiveView] = useState<ViewId>('dashboard');
   const [modalOpen, setModalOpen] = useState(false);
+  const [pinModalOpen, setPinModalOpen] = useState(false);
+  const [pendingView, setPendingView] = useState<ViewId | null>(null);
+
+  const handleNavigate = useCallback((view: ViewId) => {
+    if (view === 'recalibrate') {
+      setPendingView(view);
+      setPinModalOpen(true);
+    } else {
+      setActiveView(view);
+    }
+  }, []);
+
+  const handlePinSuccess = useCallback(() => {
+    setPinModalOpen(false);
+    if (pendingView) {
+      setActiveView(pendingView);
+      setPendingView(null);
+    }
+  }, [pendingView]);
+
+  const handlePinClose = useCallback(() => {
+    setPinModalOpen(false);
+    setPendingView(null);
+  }, []);
 
   const renderView = () => {
     switch (activeView) {
@@ -19,6 +45,8 @@ function App() {
         return <LedgerView />;
       case 'recalibrate':
         return <RecalibrateView />;
+      case 'chat':
+        return <ChatView />;
     }
   };
 
@@ -44,11 +72,18 @@ function App() {
 
       <BottomNav
         activeView={activeView}
-        onNavigate={setActiveView}
+        onNavigate={handleNavigate}
         onOpenModal={() => setModalOpen(true)}
       />
 
       <LogModal open={modalOpen} onClose={() => setModalOpen(false)} />
+
+      <PinModal
+        open={pinModalOpen}
+        mode="unlock"
+        onSuccess={handlePinSuccess}
+        onClose={handlePinClose}
+      />
     </div>
   );
 }

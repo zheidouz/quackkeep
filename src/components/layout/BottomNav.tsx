@@ -7,6 +7,7 @@ interface BottomNavProps {
 }
 
 const tabs: { id: ViewId; icon: string; label: string }[] = [
+  { id: 'chat', icon: '🤖', label: 'AI Chat' },
   { id: 'dashboard', icon: '📊', label: 'Farm' },
   { id: 'ledger', icon: '📋', label: 'Ledger' },
   { id: 'recalibrate', icon: '⚙️', label: 'Calibrate' },
@@ -31,7 +32,7 @@ export default function BottomNav({ activeView, onNavigate, onOpenModal }: Botto
   return (
     <nav className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-homestead-green text-homestead-beige shadow-2xl z-30">
       <div className="relative flex items-center justify-between px-4 py-1.5">
-        {/* Left group: Farm + Ledger */}
+        {/* Left group: AI Chat + Farm */}
         <div className="flex items-center gap-1">
           {tabs.slice(0, 2).map((tab) => (
             <NavButton
@@ -54,7 +55,7 @@ export default function BottomNav({ activeView, onNavigate, onOpenModal }: Botto
           </button>
         </div>
 
-        {/* Right group: Calibrate */}
+        {/* Right group: Ledger + Calibrate */}
         <div className="flex items-center gap-1">
           {tabs.slice(2).map((tab) => (
             <NavButton
