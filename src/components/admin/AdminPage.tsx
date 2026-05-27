@@ -4,9 +4,17 @@ import RecalibrateView from '../recalibrate/RecalibrateView';
 import AdminLedger from './AdminLedger';
 import PinModal from '../modal/PinModal';
 
+type AdminTab = 'calibrate' | 'ledger';
+
+const TABS: { id: AdminTab; icon: string; label: string }[] = [
+  { id: 'calibrate', icon: '⚙️', label: 'Calibrate' },
+  { id: 'ledger', icon: '📋', label: 'Manage Ledger' },
+];
+
 export default function AdminPage() {
   const [pinVerified, setPinVerified] = useState(false);
   const [pinOpen, setPinOpen] = useState(true);
+  const [activeTab, setActiveTab] = useState<AdminTab>('calibrate');
   const navigate = useNavigate();
 
   const handleSuccess = useCallback(() => {
@@ -56,11 +64,31 @@ export default function AdminPage() {
           ← Back to Farm
         </button>
       </header>
-      <main className="flex-1 max-w-lg w-full mx-auto p-4 pb-8 space-y-6">
-        <RecalibrateView />
-        <article className="bg-white rounded-2xl p-5 border-2 border-homestead-green shadow-[4px_4px_0px_0px_rgba(26,58,43,1)]">
-          <AdminLedger />
-        </article>
+
+      {/* Sub-navigation tabs */}
+      <nav className="bg-white border-b border-homestead-green/20 px-4 py-2 flex gap-2">
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+              activeTab === tab.id
+                ? 'bg-homestead-green text-white shadow-md'
+                : 'text-homestead-green/60 hover:text-homestead-green hover:bg-homestead-green/5'
+            }`}
+          >
+            {tab.icon} {tab.label}
+          </button>
+        ))}
+      </nav>
+
+      <main className="flex-1 max-w-lg w-full mx-auto p-4 pb-8">
+        {activeTab === 'calibrate' && <RecalibrateView />}
+        {activeTab === 'ledger' && (
+          <article className="bg-white rounded-2xl p-5 border-2 border-homestead-green shadow-[4px_4px_0px_0px_rgba(26,58,43,1)]">
+            <AdminLedger />
+          </article>
+        )}
       </main>
     </div>
   );
