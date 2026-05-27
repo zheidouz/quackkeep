@@ -75,7 +75,7 @@ router.post('/', async (req: Request, res: Response) => {
       `₱${a.eggPrice}/egg ₱${a.duckPrice}/duck. ` +
       `Rev: ₱${a.revenue} Exp: ₱${a.expenses} Net: ₱${a.balance}. ` +
       `Sold ${a.eggsSold} eggs all-time. ` +
-      `Reply in 1-2 short sentences. Be friendly, use emojis. Give actionable advice.`;
+      `Reply in 2-4 concise paragraphs. Be friendly, use emojis. Give actionable advice.`;
 
     const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
     const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${API_KEY}`;
@@ -87,7 +87,7 @@ router.post('/', async (req: Request, res: Response) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
-        generationConfig: { temperature: 0.2, maxOutputTokens: 200 },
+        generationConfig: { temperature: 0.4, maxOutputTokens: 600 },
       }),
     });
 
