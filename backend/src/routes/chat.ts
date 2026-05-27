@@ -80,11 +80,13 @@ function parseLogMessage(msg: string, _farm: unknown): LogEventData | null {
   const qty = parseInt(nums[0], 10);
   if (qty <= 0) return null;
 
-  // Extract price: per-unit (e.g. "tig-15", "@ 15 each") or total (e.g. "for 100", "100 pesos total")
-  const perUnitMatch = msg.match(/(?:tig-|@\s*|₱\s*|php\s*)(\d+)\s*(?:each|per|bawat|kada)?/i);
-  const totalMatch = msg.match(/(?:for\s*|sa halagang\s*|total\s*|kabuuang\s*|halagang\s*)(\d+)/i);
+  // Extract price: per-unit (e.g. "tig-15", "20 each", "@ 15", "₱12") or total (e.g. "for 100", "100 total")
+  const perUnitMatch = msg.match(/(?:tig-|@\s*|₱\s*|php\s*|halagang\s*)(\d+)\s*(?:each|per|bawat|kada)?/i);
+  const eachMatch = msg.match(/(\d+)\s*(?:each|per|bawat|kada|piraso)/i);
+  const totalMatch = msg.match(/(?:for\s*|total\s*|kabuuang\s*)(\d+)(?:\s*pesos|\s*php|\s*₱)?\s*(?!each|per|bawat|kada)/i);
   let unitPrice = perUnitMatch ? parseFloat(perUnitMatch[1]) : 0;
-  // If no per-unit price but total price given, calculate per-unit
+  if (!unitPrice && eachMatch) unitPrice = parseFloat(eachMatch[1]);
+  // If still no per-unit price but total price given, calculate per-unit
   if (!unitPrice && totalMatch && qty > 0) {
     unitPrice = parseFloat(totalMatch[1]) / qty;
   }
