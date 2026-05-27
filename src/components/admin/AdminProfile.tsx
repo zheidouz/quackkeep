@@ -68,7 +68,7 @@ export default function AdminProfile() {
         🧑‍🌾 Farm Profile
       </h3>
       <p className="text-xs text-homestead-green/70">
-        This tells QuackKeep AI who you are. Add any custom data below to feed your AI.
+        This tells Cookie AI who you are. Add any custom data below to feed your AI.
       </p>
 
       {/* Standard fields */}

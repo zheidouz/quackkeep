@@ -137,7 +137,7 @@ router.post('/', async (req: Request, res: Response) => {
       : '';
 
     const systemPrompt =
-      `You are QuackKeep AI, helping ${personal}.` +
+      `You are Cookie AI, helping ${personal}.` +
       `${breed}${since}${goal}${custom}` +
       `Farm: ${a.ducks} ducks, ${a.eggs} eggs, ${a.feedKg}kg feed (${a.daysLeft}d left), ` +
       `₱${a.eggPrice}/egg ₱${a.duckPrice}/duck. ` +

@@ -24,7 +24,7 @@ function ChatBubble({ msg }: { msg: ChatMessage }) {
       >
         {!isUser && (
           <span className="text-[10px] font-bold text-homestead-terracotta block mb-0.5 flex items-center gap-0.5">
-            <DuckIcon size={12} /> QuackKeep AI
+            <DuckIcon size={12} /> Cookie AI
           </span>
         )}
         <p className="whitespace-pre-wrap">{msg.text}</p>
@@ -47,7 +47,7 @@ export default function ChatHead() {
     {
       id: 'welcome',
       role: 'assistant',
-      text: "👋 Welcome to QuackKeep AI! I'm your duck farming assistant. Ask me anything about managing your flock, feed, finances, or farm operations.",
+      text: "👋 Welcome to Cookie AI! I'm your duck farming assistant. Ask me anything about managing your flock, feed, finances, or farm operations.",
       timestamp: Date.now(),
     },
   ]);
@@ -171,7 +171,7 @@ export default function ChatHead() {
           <div className="flex items-center gap-2">
             <DuckIcon size={22} />
             <div>
-              <span className="text-sm font-bold">QuackKeep AI</span>
+              <span className="text-sm font-bold">Cookie AI</span>
               <span className="text-[10px] block opacity-70">Ask anything about your farm</span>
             </div>
           </div>

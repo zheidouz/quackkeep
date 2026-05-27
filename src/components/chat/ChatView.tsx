@@ -24,7 +24,7 @@ function ChatBubble({ msg }: { msg: ChatMessage }) {
       >
         {!isUser && (
           <span className="text-xs font-bold text-homestead-terracotta block mb-1 flex items-center gap-1">
-            <DuckIcon size={14} /> QuackKeep AI
+            <DuckIcon size={14} /> Cookie AI
           </span>
         )}
         <p className="whitespace-pre-wrap">{msg.text}</p>
@@ -46,7 +46,7 @@ export default function ChatView() {
     {
       id: 'welcome',
       role: 'assistant',
-      text: "👋 Welcome to QuackKeep AI! I'm your duck farming assistant. Ask me anything about managing your flock, feed, finances, or farm operations.",
+      text: "👋 Welcome to Cookie AI! I'm your duck farming assistant. Ask me anything about managing your flock, feed, finances, or farm operations.",
       timestamp: Date.now(),
     },
   ]);
