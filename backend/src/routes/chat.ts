@@ -80,8 +80,8 @@ function parseLogMessage(msg: string, _farm: unknown): LogEventData | null {
   const qty = parseInt(nums[0], 10);
   if (qty <= 0) return null;
 
-  // Extract price if mentioned
-  const priceMatch = msg.match(/(?:₱|php|peso|presyo)?\s*(\d+)\s*(?:pesos|php|₱)?/i);
+  // Extract price per unit if mentioned (e.g. "tig-15", "@ 15", "15 pesos each", "₱12 per egg", "sa halagang 15")
+  const priceMatch = msg.match(/(?:tig-|@\s*|sa halagang\s*|₱\s*|php\s*)?(\d+)\s*(?:pesos|php|₱)?\s*(?:each|per|bawat|isang|kada|piraso)?/i);
   const unitPrice = priceMatch ? parseFloat(priceMatch[1]) : 0;
 
   const desc = msg.trim();
@@ -108,8 +108,9 @@ async function executeLogEvent(event: LogEventData): Promise<string> {
       if (event.qty > freshFarm.eggsOnHand) throw new Error(`Only ${freshFarm.eggsOnHand} eggs available`);
       freshFarm.eggsOnHand -= event.qty;
       freshFarm.totalEggsSold += event.qty;
-      const amount = event.qty * freshFarm.eggDefaultSalePrice;
-      transaction = { id: crypto.randomUUID(), date: new Date().toISOString(), type: 'revenue', amount, category: 'Sales', description: event.desc || `Sold ${event.qty} eggs` };
+      const eggPrice = event.unitPrice || freshFarm.eggDefaultSalePrice;
+      const amount = event.qty * eggPrice;
+      transaction = { id: crypto.randomUUID(), date: new Date().toISOString(), type: 'revenue', amount, category: 'Sales', description: event.desc || `Sold ${event.qty} eggs @ ₱${eggPrice}` };
       resultMsg = `+${event.qty} eggs sold (₱${amount.toFixed(2)})`;
       break;
     }
