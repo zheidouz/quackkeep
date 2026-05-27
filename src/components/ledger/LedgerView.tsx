@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useFarm } from '../../context/FarmContext';
 
+const PAGE_SIZE = 10;
+
 const FILTERS = [
   { id: 'all', label: 'All' },
   { id: 'Sales', label: 'Sales' },
@@ -13,11 +15,16 @@ const FILTERS = [
 export default function LedgerView() {
   const { state } = useFarm();
   const [activeFilter, setActiveFilter] = useState('all');
+  const [page, setPage] = useState(0);
 
   const filtered = state.transactions.filter((t) => {
     if (activeFilter === 'all') return true;
     return t.category === activeFilter;
   });
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages - 1);
+  const pageStart = safePage * PAGE_SIZE;
+  const paged = filtered.slice(pageStart, pageStart + PAGE_SIZE);
 
   return (
     <section className="space-y-4">
@@ -33,7 +40,7 @@ export default function LedgerView() {
         {FILTERS.map((f) => (
           <button
             key={f.id}
-            onClick={() => setActiveFilter(f.id)}
+            onClick={() => { setActiveFilter(f.id); setPage(0); }}
             className={`px-3 py-1.5 rounded-full text-xs font-bold border border-homestead-green shrink-0 ${
               activeFilter === f.id
                 ? 'bg-homestead-green text-white'
@@ -47,12 +54,12 @@ export default function LedgerView() {
 
       {/* Transaction List */}
       <div className="space-y-2">
-        {filtered.length === 0 ? (
+        {paged.length === 0 ? (
           <div className="text-center py-8 text-xs text-homestead-green/60">
             No transactions match this filter category.
           </div>
         ) : (
-          filtered.map((t) => {
+          paged.map((t) => {
             const formattedDate = new Date(t.date).toLocaleDateString(undefined, {
               month: 'short', day: 'numeric', year: 'numeric',
             });
@@ -82,6 +89,29 @@ export default function LedgerView() {
           })
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <button
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            disabled={safePage === 0}
+            className="px-4 py-2 rounded-lg text-xs font-bold border border-homestead-green disabled:opacity-30 disabled:cursor-not-allowed hover:bg-homestead-green hover:text-white transition-all cursor-pointer"
+          >
+            ← Prev
+          </button>
+          <span className="text-xs font-bold text-homestead-green">
+            Page {safePage + 1} of {totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+            disabled={safePage >= totalPages - 1}
+            className="px-4 py-2 rounded-lg text-xs font-bold border border-homestead-green disabled:opacity-30 disabled:cursor-not-allowed hover:bg-homestead-green hover:text-white transition-all cursor-pointer"
+          >
+            Next →
+          </button>
+        </div>
+      )}
     </section>
   );
 }
