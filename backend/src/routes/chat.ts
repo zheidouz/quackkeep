@@ -269,7 +269,7 @@ router.post('/', async (req: Request, res: Response) => {
     const data = await geminiRes.json() as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
     const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not generate a response.';
 
-    res.json({ reply });
+    res.json({ reply, farmChanged: !!logResult });
   } catch (err) {
     console.error('POST /api/chat error:', err);
     res.status(500).json({ error: 'Failed to process chat message' });

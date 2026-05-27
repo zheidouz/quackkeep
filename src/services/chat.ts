@@ -1,6 +1,11 @@
 const API_BASE = '/_/backend/api/chat';
 
-export async function sendChatMessage(message: string): Promise<string> {
+export interface ChatResponse {
+  reply: string;
+  farmChanged: boolean;
+}
+
+export async function sendChatMessage(message: string): Promise<ChatResponse> {
   const res = await fetch(API_BASE, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -12,6 +17,5 @@ export async function sendChatMessage(message: string): Promise<string> {
     throw new Error(err.error || `Chat API returned ${res.status}`);
   }
 
-  const data = await res.json();
-  return data.reply;
+  return res.json();
 }

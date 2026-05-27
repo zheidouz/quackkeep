@@ -22,6 +22,7 @@ interface FarmContextValue {
   addTransaction: (t: Transaction) => void;
   deleteTransaction: (id: string) => void;
   processLogEvent: (type: LogEventType, qty: number, desc: string, feedPricePerKg?: number, duckSellPrice?: number, infertileCount?: number) => string | null;
+  refreshFarm: () => Promise<void>;
 }
 
 const FarmContext = createContext<FarmContextValue | null>(null);
@@ -74,6 +75,15 @@ export function FarmProvider({ children }: { children: ReactNode }) {
     })),
     [updateAndSave],
   );
+
+  const refreshFarm = useCallback(async () => {
+    try {
+      const data = await fetchFarmState();
+      setState(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  }, []);
 
   const processLogEvent = useCallback(
     (type: LogEventType, qty: number, desc: string, feedPricePerKg?: number, duckSellPrice?: number, infertileCount?: number): string | null => {
@@ -264,7 +274,7 @@ export function FarmProvider({ children }: { children: ReactNode }) {
 
   return (
     <FarmContext.Provider
-      value={{ state, loading, error, updateState, resetState, addTransaction, deleteTransaction, processLogEvent }}
+      value={{ state, loading, error, updateState, resetState, addTransaction, deleteTransaction, processLogEvent, refreshFarm }}
     >
       {children}
     </FarmContext.Provider>

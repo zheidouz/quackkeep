@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import type { ChatMessage } from '../../types';
 import { sendChatMessage } from '../../services/chat';
+import { useFarm } from '../../context/FarmContext';
 
 const SUGGESTIONS = [
   'How much feed should I order for next month?',
@@ -39,6 +40,7 @@ function ChatBubble({ msg }: { msg: ChatMessage }) {
 }
 
 export default function ChatView() {
+  const { refreshFarm } = useFarm();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome',
@@ -79,14 +81,17 @@ export default function ChatView() {
     setLoading(true);
 
     try {
-      const reply = await sendChatMessage(trimmed);
+      const res = await sendChatMessage(trimmed);
       const assistantMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        text: reply,
+        text: res.reply,
         timestamp: Date.now(),
       };
       setMessages((prev) => [...prev, assistantMsg]);
+      if (res.farmChanged) {
+        refreshFarm();
+      }
     } catch (err) {
       const errorMsg: ChatMessage = {
         id: crypto.randomUUID(),
