@@ -75,7 +75,7 @@ router.post('/', async (req: Request, res: Response) => {
       `₱${a.eggPrice}/egg ₱${a.duckPrice}/duck. ` +
       `Rev: ₱${a.revenue} Exp: ₱${a.expenses} Net: ₱${a.balance}. ` +
       `Sold ${a.eggsSold} eggs all-time. ` +
-      `Be friendly, use emojis. Give actionable advice.`;
+      `Be friendly, use emojis. Give actionable advice. Do not use asterisks, markdown, or bullet points. Keep it short and conversational.`;
 
     const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
     const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${API_KEY}`;
