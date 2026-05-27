@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { useFarm } from '../../context/FarmContext';
-import { useToast } from '../../context/ToastContext';
-import TransactionItem from './TransactionItem';
 
 const FILTERS = [
   { id: 'all', label: 'All' },
@@ -13,21 +11,13 @@ const FILTERS = [
 ] as const;
 
 export default function LedgerView() {
-  const { state, deleteTransaction } = useFarm();
-  const { showToast } = useToast();
+  const { state } = useFarm();
   const [activeFilter, setActiveFilter] = useState('all');
 
   const filtered = state.transactions.filter((t) => {
     if (activeFilter === 'all') return true;
     return t.category === activeFilter;
   });
-
-  const handleDelete = (id: string) => {
-    if (confirm("Delete this financial log entry permanently? Your stock balances won't reverse automatically.")) {
-      deleteTransaction(id);
-      showToast('Entry deleted.');
-    }
-  };
 
   return (
     <section className="space-y-4">
@@ -62,9 +52,34 @@ export default function LedgerView() {
             No transactions match this filter category.
           </div>
         ) : (
-          filtered.map((t) => (
-            <TransactionItem key={t.id} transaction={t} onDelete={handleDelete} />
-          ))
+          filtered.map((t) => {
+            const formattedDate = new Date(t.date).toLocaleDateString(undefined, {
+              month: 'short', day: 'numeric', year: 'numeric',
+            });
+            const isRev = t.type === 'revenue';
+            return (
+              <article key={t.id} className="bg-white p-3.5 rounded-xl border border-homestead-green shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <span className={`text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-md ${
+                        isRev ? 'bg-homestead-light-green text-homestead-green' : 'bg-homestead-beige border border-homestead-green/30'
+                      }`}>
+                        {t.category}
+                      </span>
+                      <span className="text-[10px] text-homestead-green/60 font-semibold">{formattedDate}</span>
+                    </div>
+                    <p className="text-sm font-bold text-homestead-green">{t.description}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className={`text-sm font-black ${isRev ? 'text-green-700' : 'text-homestead-terracotta'}`}>
+                      {isRev ? '+' : '-'}₱{t.amount.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </article>
+            );
+          })
         )}
       </div>
     </section>

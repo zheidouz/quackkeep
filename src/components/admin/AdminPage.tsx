@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import RecalibrateView from '../recalibrate/RecalibrateView';
+import AdminLedger from './AdminLedger';
 import PinModal from '../modal/PinModal';
 
 export default function AdminPage() {
@@ -55,8 +56,11 @@ export default function AdminPage() {
           ← Back to Farm
         </button>
       </header>
-      <main className="flex-1 max-w-lg w-full mx-auto p-4 pb-8">
+      <main className="flex-1 max-w-lg w-full mx-auto p-4 pb-8 space-y-6">
         <RecalibrateView />
+        <article className="bg-white rounded-2xl p-5 border-2 border-homestead-green shadow-[4px_4px_0px_0px_rgba(26,58,43,1)]">
+          <AdminLedger />
+        </article>
       </main>
     </div>
   );
