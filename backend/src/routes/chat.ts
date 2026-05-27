@@ -1,5 +1,6 @@
 import { Router, type Request, type Response } from 'express';
 import FarmState from '../models/FarmState.js';
+import FarmerProfile from '../models/FarmerProfile.js';
 
 const router = Router();
 
@@ -68,9 +69,21 @@ router.post('/', async (req: Request, res: Response) => {
 
     const a = getAnalytics(farm);
 
-    // Compact system prompt — 40% fewer tokens than before
+    // Fetch farmer profile
+    const profile = await FarmerProfile.findOne();
+
+    // Build system prompt with farm data + personal profile
+    const personal = profile
+      ? `${profile.farmerName} at ${profile.farmName}${profile.location ? ', ' + profile.location : ''}`
+      : 'a duck farmer';
+
+    const goal = profile?.farmGoal ? ` Goal: ${profile.farmGoal}.` : '';
+    const breed = profile?.breed ? ` Breed: ${profile.breed}.` : '';
+    const since = profile?.since ? ` Farming since ${profile.since}.` : '';
+
     const systemPrompt =
-      `You are QuackKeep AI, a duck farming assistant. ` +
+      `You are QuackKeep AI, helping ${personal}.` +
+      `${breed}${since}${goal}` +
       `Farm: ${a.ducks} ducks, ${a.eggs} eggs, ${a.feedKg}kg feed (${a.daysLeft}d left), ` +
       `₱${a.eggPrice}/egg ₱${a.duckPrice}/duck. ` +
       `Rev: ₱${a.revenue} Exp: ₱${a.expenses} Net: ₱${a.balance}. ` +

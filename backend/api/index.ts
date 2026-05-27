@@ -4,6 +4,7 @@ import mongoose, { type Mongoose } from 'mongoose';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import farmRoutes from '../src/routes/farm.js';
 import chatRoutes from '../src/routes/chat.js';
+import profileRoutes from '../src/routes/profile.js';
 
 const MONGODB_URI = process.env.MONGODB_URI;
 if (!MONGODB_URI) {
@@ -15,6 +16,7 @@ app.use(cors());
 app.use(express.json());
 app.use('/api/farm', farmRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/profile', profileRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));

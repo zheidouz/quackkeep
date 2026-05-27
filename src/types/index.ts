@@ -1,3 +1,12 @@
+export interface FarmerProfile {
+  farmName: string;
+  farmerName: string;
+  location: string;
+  farmGoal: string;
+  breed: string;
+  since: string;
+}
+
 export interface Transaction {
   id: string;
   date: string;
