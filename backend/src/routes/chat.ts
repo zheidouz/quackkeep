@@ -21,7 +21,7 @@ interface FarmAnalytics {
 let cachedAnalytics: FarmAnalytics | null = null;
 let cachedFarmId: string | null = null;
 
-function getAnalytics(farm: { ducksCount: number; eggsOnHand: number; totalEggsSold: number; feedKgRemaining: number; feedConsumptionPerDuckPerDay: number; eggDefaultSalePrice: number; duckDefaultSalePrice: number; transactions: { type: string; amount: number }[]; _id: string }): FarmAnalytics {
+function getAnalytics(farm: { ducksCount: number; eggsOnHand: number; totalEggsSold: number; feedKgRemaining: number; feedConsumptionPerDuckPerDay: number; eggDefaultSalePrice: number; duckDefaultSalePrice: number; transactions: { type: string; amount: number }[]; _id: unknown }): FarmAnalytics {
   const id = String(farm._id);
   if (cachedAnalytics && cachedFarmId === id) return cachedAnalytics;
 
