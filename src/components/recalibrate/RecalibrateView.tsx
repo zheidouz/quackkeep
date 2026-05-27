@@ -2,30 +2,11 @@ import { useState, useEffect } from 'react';
 import { useFarm } from '../../context/FarmContext';
 import { useToast } from '../../context/ToastContext';
 import PinModal from '../modal/PinModal';
-import type { FarmerProfile } from '../../types';
-import { fetchProfile, saveProfile } from '../../services/profile';
-
-const DEFAULT_PROFILE: FarmerProfile = {
-  farmName: '', farmerName: '', location: '',
-  farmGoal: '', breed: '', since: '',
-};
 
 export default function RecalibrateView() {
   const [pinModalOpen, setPinModalOpen] = useState(false);
   const { state, updateState, resetState } = useFarm();
   const { showToast } = useToast();
-
-  // Profile form state
-  const [profile, setProfile] = useState<FarmerProfile>(DEFAULT_PROFILE);
-  const [profileLoading, setProfileLoading] = useState(true);
-
-  // Load profile on mount
-  useEffect(() => {
-    fetchProfile()
-      .then(setProfile)
-      .catch(() => { /* ignore — defaults will be used */ })
-      .finally(() => setProfileLoading(false));
-  }, []);
 
   // Inventory form state
   const [ducks, setDucks] = useState(state.ducksCount);
@@ -197,98 +178,6 @@ export default function RecalibrateView() {
             Update Constants
           </button>
         </form>
-      </article>
-
-      {/* Farmer Profile */}
-      <article className="bg-white rounded-2xl p-5 border-2 border-homestead-green shadow-[4px_4px_0px_0px_rgba(26,58,43,1)] space-y-4">
-        <h3 className="text-xs font-black uppercase tracking-wider text-homestead-green opacity-75">
-          🧑‍🌾 Your Farm Profile
-        </h3>
-        <p className="text-xs text-homestead-green/70">
-          This tells QuackKeep AI who you are for personalized advice.
-        </p>
-
-        {profileLoading ? (
-          <div className="h-20 bg-homestead-green/5 rounded-lg animate-pulse" />
-        ) : (
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              try {
-                await saveProfile(profile);
-                showToast('Profile saved! AI will use it next chat.');
-              } catch {
-                showToast('Failed to save profile');
-              }
-            }}
-            className="space-y-3"
-          >
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold mb-1">Your Name</label>
-                <input
-                  value={profile.farmerName}
-                  onChange={(e) => setProfile({ ...profile, farmerName: e.target.value })}
-                  placeholder="e.g. Juan"
-                  className="w-full bg-homestead-beige/50 border border-homestead-green rounded-lg px-3 py-2 text-sm font-bold"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold mb-1">Farm Name</label>
-                <input
-                  value={profile.farmName}
-                  onChange={(e) => setProfile({ ...profile, farmName: e.target.value })}
-                  placeholder="e.g. Itik Gulaman Farm"
-                  className="w-full bg-homestead-beige/50 border border-homestead-green rounded-lg px-3 py-2 text-sm font-bold"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-bold mb-1">Location</label>
-              <input
-                value={profile.location}
-                onChange={(e) => setProfile({ ...profile, location: e.target.value })}
-                placeholder="e.g. Nueva Ecija, Philippines"
-                className="w-full bg-homestead-beige/50 border border-homestead-green rounded-lg px-3 py-2 text-sm font-bold"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold mb-1">Duck Breed</label>
-                <input
-                  value={profile.breed}
-                  onChange={(e) => setProfile({ ...profile, breed: e.target.value })}
-                  placeholder="e.g. Itik, Pekin, Muscovy"
-                  className="w-full bg-homestead-beige/50 border border-homestead-green rounded-lg px-3 py-2 text-sm font-bold"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold mb-1">Farming Since</label>
-                <input
-                  value={profile.since}
-                  onChange={(e) => setProfile({ ...profile, since: e.target.value })}
-                  placeholder="e.g. 2020"
-                  className="w-full bg-homestead-beige/50 border border-homestead-green rounded-lg px-3 py-2 text-sm font-bold"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-bold mb-1">Your Farm Goal</label>
-              <input
-                value={profile.farmGoal}
-                onChange={(e) => setProfile({ ...profile, farmGoal: e.target.value })}
-                placeholder="e.g. Sell 5000 eggs per month"
-                className="w-full bg-homestead-beige/50 border border-homestead-green rounded-lg px-3 py-2 text-sm font-bold"
-              />
-            </div>
-            <button
-              type="submit"
-              className="w-full bg-homestead-green text-white text-xs font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-opacity-90 active:scale-95 transition-all cursor-pointer"
-            >
-              💾 Save Profile
-            </button>
-          </form>
-        )}
       </article>
 
       {/* PIN Settings */}

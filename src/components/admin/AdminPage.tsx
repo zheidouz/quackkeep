@@ -2,13 +2,15 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import RecalibrateView from '../recalibrate/RecalibrateView';
 import AdminLedger from './AdminLedger';
+import AdminProfile from './AdminProfile';
 import PinModal from '../modal/PinModal';
 
-type AdminTab = 'calibrate' | 'ledger';
+type AdminTab = 'profile' | 'calibrate' | 'ledger';
 
 const TABS: { id: AdminTab; icon: string; label: string }[] = [
+  { id: 'profile', icon: '🧑‍🌾', label: 'Profile' },
   { id: 'calibrate', icon: '⚙️', label: 'Calibrate' },
-  { id: 'ledger', icon: '📋', label: 'Manage Ledger' },
+  { id: 'ledger', icon: '📋', label: 'Ledger' },
 ];
 
 export default function AdminPage() {
@@ -83,6 +85,11 @@ export default function AdminPage() {
       </nav>
 
       <main className="flex-1 max-w-lg w-full mx-auto p-4 pb-8">
+        {activeTab === 'profile' && (
+          <article className="bg-white rounded-2xl p-5 border-2 border-homestead-green shadow-[4px_4px_0px_0px_rgba(26,58,43,1)]">
+            <AdminProfile />
+          </article>
+        )}
         {activeTab === 'calibrate' && <RecalibrateView />}
         {activeTab === 'ledger' && (
           <article className="bg-white rounded-2xl p-5 border-2 border-homestead-green shadow-[4px_4px_0px_0px_rgba(26,58,43,1)]">

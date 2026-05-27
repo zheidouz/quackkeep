@@ -5,6 +5,7 @@ export interface FarmerProfile {
   farmGoal: string;
   breed: string;
   since: string;
+  customFields: Record<string, string>;
 }
 
 export interface Transaction {

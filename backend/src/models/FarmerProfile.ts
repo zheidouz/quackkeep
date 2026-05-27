@@ -7,6 +7,7 @@ export interface IFarmerProfile extends Document {
   farmGoal: string;
   breed: string;
   since: string;
+  customFields: Record<string, string>;
 }
 
 const FarmerProfileSchema = new Schema<IFarmerProfile>({
@@ -16,6 +17,7 @@ const FarmerProfileSchema = new Schema<IFarmerProfile>({
   farmGoal: { type: String, default: '' },
   breed: { type: String, default: '' },
   since: { type: String, default: '' },
+  customFields: { type: Schema.Types.Mixed, default: {} },
 });
 
 export default mongoose.model<IFarmerProfile>('FarmerProfile', FarmerProfileSchema, 'farmerprofile');

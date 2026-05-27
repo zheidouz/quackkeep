@@ -80,10 +80,13 @@ router.post('/', async (req: Request, res: Response) => {
     const goal = profile?.farmGoal ? ` Goal: ${profile.farmGoal}.` : '';
     const breed = profile?.breed ? ` Breed: ${profile.breed}.` : '';
     const since = profile?.since ? ` Farming since ${profile.since}.` : '';
+    const custom = profile?.customFields && Object.keys(profile.customFields).length > 0
+      ? ` Extra info: ${Object.entries(profile.customFields).map(([k, v]) => `${k}: ${v}`).join(', ')}. `
+      : '';
 
     const systemPrompt =
       `You are QuackKeep AI, helping ${personal}.` +
-      `${breed}${since}${goal}` +
+      `${breed}${since}${goal}${custom}` +
       `Farm: ${a.ducks} ducks, ${a.eggs} eggs, ${a.feedKg}kg feed (${a.daysLeft}d left), ` +
       `₱${a.eggPrice}/egg ₱${a.duckPrice}/duck. ` +
       `Rev: ₱${a.revenue} Exp: ₱${a.expenses} Net: ₱${a.balance}. ` +
