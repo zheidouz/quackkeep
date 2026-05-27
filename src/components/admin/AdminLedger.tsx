@@ -17,10 +17,13 @@ const CATEGORIES = [
   'Transport Costs', 'Misc Expenses',
 ] as const;
 
+const PAGE_SIZE = 10;
+
 export default function AdminLedger() {
   const { state, deleteTransaction, updateState } = useFarm();
   const { showToast } = useToast();
   const [activeFilter, setActiveFilter] = useState('all');
+  const [page, setPage] = useState(0);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<{ description: string; amount: number; category: string; type: 'revenue' | 'expense' }>({ description: '', amount: 0, category: '', type: 'expense' });
 
@@ -28,6 +31,10 @@ export default function AdminLedger() {
     if (activeFilter === 'all') return true;
     return t.category === activeFilter;
   });
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages - 1);
+  const pageStart = safePage * PAGE_SIZE;
+  const paged = filtered.slice(pageStart, pageStart + PAGE_SIZE);
 
   const startEdit = (t: Transaction) => {
     setEditingId(t.id);
@@ -82,7 +89,7 @@ export default function AdminLedger() {
         {FILTERS.map((f) => (
           <button
             key={f.id}
-            onClick={() => setActiveFilter(f.id)}
+            onClick={() => { setActiveFilter(f.id); setPage(0); }}
             className={`px-3 py-1.5 rounded-full text-xs font-bold border border-homestead-green shrink-0 cursor-pointer ${
               activeFilter === f.id
                 ? 'bg-homestead-green text-white'
@@ -96,12 +103,12 @@ export default function AdminLedger() {
 
       {/* Transaction List */}
       <div className="space-y-2">
-        {filtered.length === 0 ? (
+        {paged.length === 0 ? (
           <div className="text-center py-8 text-xs text-homestead-green/60">
             No transactions match this filter.
           </div>
         ) : (
-          filtered.map((t) => {
+          paged.map((t) => {
             const formattedDate = new Date(t.date).toLocaleDateString(undefined, {
               month: 'short', day: 'numeric', year: 'numeric',
             });
@@ -220,6 +227,29 @@ export default function AdminLedger() {
           })
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <button
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            disabled={safePage === 0}
+            className="px-4 py-2 rounded-lg text-xs font-bold border border-homestead-green disabled:opacity-30 disabled:cursor-not-allowed hover:bg-homestead-green hover:text-white transition-all cursor-pointer"
+          >
+            ← Prev
+          </button>
+          <span className="text-xs font-bold text-homestead-green">
+            Page {safePage + 1} of {totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+            disabled={safePage >= totalPages - 1}
+            className="px-4 py-2 rounded-lg text-xs font-bold border border-homestead-green disabled:opacity-30 disabled:cursor-not-allowed hover:bg-homestead-green hover:text-white transition-all cursor-pointer"
+          >
+            Next →
+          </button>
+        </div>
+      )}
     </section>
   );
 }
