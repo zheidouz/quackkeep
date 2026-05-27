@@ -55,13 +55,13 @@ interface LogEventData {
 function parseLogMessage(msg: string, _farm: unknown): LogEventData | null {
   const lower = msg.toLowerCase();
 
-  // Map keywords to event types
-  const patterns: { keywords: string[]; type: string; priceRequired?: boolean }[] = [
+  // Map keywords to event types (check phrases before single words)
+  const patterns: { keywords: string[]; type: string }[] = [
     { keywords: ['nangolekta', 'nakolekta', 'collect', 'pulot'], type: 'egg-collect' },
+    { keywords: ['benta.*itik', 'sell.*duck', 'bentang itik'], type: 'duck-sell' },
     { keywords: ['benta', 'sell', 'sold', 'bentang'], type: 'egg-sell' },
     { keywords: ['bili', 'buy', 'bought', 'bilhin'], type: 'duck-buy' },
     { keywords: ['pisa', 'hatch', 'napisa'], type: 'duck-hatch' },
-    { keywords: ['itik', 'benta ng itik', 'sold duck'], type: 'duck-sell' },
     { keywords: ['patay', 'lost', 'namatay', 'nawala'], type: 'duck-lost' },
     { keywords: ['feed', 'feeds', 'feed bag', 'pakain'], type: 'feed-buy' },
     { keywords: ['gamit', 'use feed', 'consume'], type: 'feed-use' },
@@ -70,8 +70,8 @@ function parseLogMessage(msg: string, _farm: unknown): LogEventData | null {
     { keywords: ['transport', 'hatid', 'sundo', 'byahe', 'deliver'], type: 'expense-transport' },
   ];
 
-  // Check if any keyword matches
-  const matched = patterns.find((p) => p.keywords.some((k) => lower.includes(k)));
+  // Check if any keyword matches (support regex patterns)
+  const matched = patterns.find((p) => p.keywords.some((k) => new RegExp(k, 'i').test(lower)));
   if (!matched) return null;
 
   // Extract quantity — look for numbers
@@ -80,8 +80,8 @@ function parseLogMessage(msg: string, _farm: unknown): LogEventData | null {
   const qty = parseInt(nums[0], 10);
   if (qty <= 0) return null;
 
-  // Extract price per unit if mentioned (e.g. "tig-15", "@ 15", "15 pesos each", "₱12 per egg", "sa halagang 15")
-  const priceMatch = msg.match(/(?:tig-|@\s*|sa halagang\s*|₱\s*|php\s*)?(\d+)\s*(?:pesos|php|₱)?\s*(?:each|per|bawat|isang|kada|piraso)?/i);
+  // Extract price per unit if mentioned (e.g. "tig-15", "@ 15", "₱12 each", "sa halagang 15")
+  const priceMatch = msg.match(/(?:tig-|@\s*|sa halagang\s*|₱\s*|php\s*)(\d+)/i);
   const unitPrice = priceMatch ? parseFloat(priceMatch[1]) : 0;
 
   const desc = msg.trim();
