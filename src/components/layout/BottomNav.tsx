@@ -10,7 +10,6 @@ const tabs: { id: ViewId; icon: string; label: string }[] = [
   { id: 'chat', icon: '🤖', label: 'AI Chat' },
   { id: 'dashboard', icon: '📊', label: 'Farm' },
   { id: 'ledger', icon: '📋', label: 'Ledger' },
-  { id: 'recalibrate', icon: '⚙️', label: 'Calibrate' },
 ];
 
 function NavButton({ tab, active, onClick }: { tab: typeof tabs[number]; active: boolean; onClick: () => void }) {
@@ -32,9 +31,9 @@ export default function BottomNav({ activeView, onNavigate, onOpenModal }: Botto
   return (
     <nav className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-homestead-green text-homestead-beige shadow-2xl z-30">
       <div className="relative flex items-center justify-between px-4 py-1.5">
-        {/* Left group: AI Chat + Farm */}
+        {/* Left: AI Chat */}
         <div className="flex items-center gap-1">
-          {tabs.slice(0, 2).map((tab) => (
+          {tabs.slice(0, 1).map((tab) => (
             <NavButton
               key={tab.id}
               tab={tab}
@@ -55,9 +54,9 @@ export default function BottomNav({ activeView, onNavigate, onOpenModal }: Botto
           </button>
         </div>
 
-        {/* Right group: Ledger + Calibrate */}
+        {/* Right: Farm + Ledger */}
         <div className="flex items-center gap-1">
-          {tabs.slice(2).map((tab) => (
+          {tabs.slice(1).map((tab) => (
             <NavButton
               key={tab.id}
               tab={tab}

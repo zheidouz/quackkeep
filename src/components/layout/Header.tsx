@@ -1,9 +1,11 @@
 import { useToast } from '../../context/ToastContext';
 import { useFarm } from '../../context/FarmContext';
+import { useNavigate } from 'react-router-dom';
 
 export default function Header() {
   const { message } = useToast();
   const { error } = useFarm();
+  const navigate = useNavigate();
 
   return (
     <header className="sticky top-0 bg-homestead-green text-homestead-beige border-b border-homestead-green px-4 py-3 shadow-md flex items-center justify-between z-40">
@@ -13,15 +15,24 @@ export default function Header() {
         </svg>
         <h1 className="text-xl font-bold tracking-tight">QuackKeep</h1>
       </div>
-      <div
-        role="status"
-        aria-live="polite"
-        className={`text-sm px-3 py-1 rounded-md border border-white max-w-[200px] truncate transition-opacity duration-300 ${
-          error ? 'bg-red-700 text-white opacity-100' :
-          message ? 'bg-homestead-terracotta text-white opacity-100' : 'bg-homestead-terracotta text-white opacity-0'
-        }`}
-      >
-        {error || message || 'Ready'}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => navigate('/admin')}
+          className="text-xs bg-homestead-terracotta/80 hover:bg-homestead-terracotta px-2.5 py-1 rounded-md font-semibold transition-colors cursor-pointer"
+          aria-label="Admin panel"
+        >
+          ⚙️
+        </button>
+        <div
+          role="status"
+          aria-live="polite"
+          className={`text-sm px-3 py-1 rounded-md border border-white max-w-[200px] truncate transition-opacity duration-300 ${
+            error ? 'bg-red-700 text-white opacity-100' :
+            message ? 'bg-homestead-terracotta text-white opacity-100' : 'bg-homestead-terracotta text-white opacity-0'
+          }`}
+        >
+          {error || message || 'Ready'}
+        </div>
       </div>
     </header>
   );
