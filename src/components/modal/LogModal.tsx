@@ -101,7 +101,9 @@ export default function LogModal({ open, onClose }: Props) {
       return;
     }
 
-    const result = processLogEvent(eventType, qty, desc, unitPrice, unitPrice, infertileCount);
+    const feedPricePerKg = eventType === 'feed-buy' ? unitPrice : undefined;
+    const duckPrice = (eventType === 'duck-sell' || eventType === 'duck-buy') ? unitPrice : undefined;
+    const result = processLogEvent(eventType, qty, desc, feedPricePerKg, duckPrice, infertileCount);
     if (result) {
       showToast(result);
       onClose();

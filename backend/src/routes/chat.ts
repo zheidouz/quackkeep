@@ -1,192 +1,73 @@
 import { Router, type Request, type Response } from 'express';
 import FarmState from '../models/FarmState.js';
 import FarmerProfile from '../models/FarmerProfile.js';
+import { parseLogMessage, computeLogEvent } from '../services/logProcessor.js';
+import type { FarmStateData } from '../services/logProcessor.js';
 
 const router = Router();
 
-// Cache farm analytics so we don't recompute on every request
-interface FarmAnalytics {
-  ducks: number;
-  eggs: number;
-  eggsSold: number;
-  feedKg: number;
-  dailyUse: number;
-  daysLeft: string;
-  eggPrice: number;
-  duckPrice: number;
-  revenue: number;
-  expenses: number;
-  balance: number;
-  txCount: number;
+// ── Rate limiting (simple in-memory, per-IP) ──
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 10;        // max requests
+const RATE_WINDOW_MS = 60_000; // per 1 minute
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT) return false;
+  entry.count++;
+  return true;
 }
-let cachedAnalytics: FarmAnalytics | null = null;
-let cachedFarmId: string | null = null;
 
-function getAnalytics(farm: { ducksCount: number; eggsOnHand: number; totalEggsSold: number; feedKgRemaining: number; feedConsumptionPerDuckPerDay: number; eggDefaultSalePrice: number; duckDefaultSalePrice: number; transactions: { type: string; amount: number }[]; _id: unknown }): FarmAnalytics {
-  const id = String(farm._id);
-  if (cachedAnalytics && cachedFarmId === id) return cachedAnalytics;
-
+// ── Analytics helper (no stale cache — always fresh) ──
+function getAnalytics(farm: FarmStateData & { transactions: { type: string; amount: number }[] }) {
   const ducks = farm.ducksCount;
   const dailyUse = ducks * farm.feedConsumptionPerDuckPerDay;
   const income = farm.transactions.filter((t) => t.type === 'revenue').reduce((s, t) => s + t.amount, 0);
   const expense = farm.transactions.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
   const daysLeft = dailyUse > 0 ? String(Math.floor(farm.feedKgRemaining / dailyUse)) : 'N/A';
 
-  cachedAnalytics = {
+  return {
     ducks, eggs: farm.eggsOnHand, eggsSold: farm.totalEggsSold,
     feedKg: farm.feedKgRemaining, dailyUse, daysLeft,
     eggPrice: farm.eggDefaultSalePrice, duckPrice: farm.duckDefaultSalePrice,
     revenue: income, expenses: expense, balance: income - expense,
     txCount: farm.transactions.length,
   };
-  cachedFarmId = id;
-  return cachedAnalytics;
-}
-
-// Simple log event parser — detects farm log intent from user message
-interface LogEventData {
-  type: string;
-  qty: number;
-  desc: string;
-  unitPrice: number;
-  infertileCount: number;
-}
-
-function parseLogMessage(msg: string, _farm: unknown): LogEventData | null {
-  const lower = msg.toLowerCase();
-
-  // Map keywords to event types (check phrases before single words)
-  const patterns: { keywords: string[]; type: string }[] = [
-    { keywords: ['nangolekta', 'nakolekta', 'collect', 'pulot'], type: 'egg-collect' },
-    { keywords: ['benta.*itik', 'sell.*duck', 'bentang itik'], type: 'duck-sell' },
-    { keywords: ['benta', 'sell', 'sold', 'bentang'], type: 'egg-sell' },
-    { keywords: ['bili', 'buy', 'bought', 'bilhin'], type: 'duck-buy' },
-    { keywords: ['pisa', 'hatch', 'napisa'], type: 'duck-hatch' },
-    { keywords: ['patay', 'lost', 'namatay', 'nawala'], type: 'duck-lost' },
-    { keywords: ['feed', 'feeds', 'feed bag', 'pakain'], type: 'feed-buy' },
-    { keywords: ['gamit', 'use feed', 'consume'], type: 'feed-use' },
-    { keywords: ['labor', 'sweldo', 'pasweldo', 'manggagawa'], type: 'expense-labor' },
-    { keywords: ['vitamins', 'gamat', 'vet', 'beterinaryo', 'mediko'], type: 'expense-med' },
-    { keywords: ['transport', 'hatid', 'sundo', 'byahe', 'deliver'], type: 'expense-transport' },
-  ];
-
-  // Check if any keyword matches (support regex patterns)
-  const matched = patterns.find((p) => p.keywords.some((k) => new RegExp(k, 'i').test(lower)));
-  if (!matched) return null;
-
-  // Extract quantity — look for numbers
-  const nums = msg.match(/\d+/g);
-  if (!nums) return null;
-  const qty = parseInt(nums[0], 10);
-  if (qty <= 0) return null;
-
-  // Extract price: per-unit (e.g. "tig-15", "20 each", "@ 15", "₱12") or total (e.g. "for 100", "100 total")
-  const perUnitMatch = msg.match(/(?:tig-|@\s*|₱\s*|php\s*|halagang\s*)(\d+)\s*(?:each|per|bawat|kada)?/i);
-  const eachMatch = msg.match(/(\d+)\s*(?:each|per|bawat|kada|piraso)/i);
-  const totalMatch = msg.match(/(?:for\s*|total\s*|kabuuang\s*)(\d+)(?:\s*pesos|\s*php|\s*₱)?\s*(?!each|per|bawat|kada)/i);
-  let unitPrice = perUnitMatch ? parseFloat(perUnitMatch[1]) : 0;
-  if (!unitPrice && eachMatch) unitPrice = parseFloat(eachMatch[1]);
-  // If still no per-unit price but total price given, calculate per-unit
-  if (!unitPrice && totalMatch && qty > 0) {
-    unitPrice = parseFloat(totalMatch[1]) / qty;
-  }
-
-  const desc = msg.trim();
-  const infertileCount = 0;
-
-  return { type: matched.type, qty, desc, unitPrice, infertileCount };
-}
-
-// Execute a log event against MongoDB
-async function executeLogEvent(event: LogEventData): Promise<string> {
-  const freshFarm = await FarmState.findOne();
-  if (!freshFarm) throw new Error('Farm not found');
-
-  let transaction: { id: string; date: string; type: 'revenue' | 'expense'; amount: number; category: string; description: string } | null = null;
-  let resultMsg = '';
-
-  switch (event.type) {
-    case 'egg-collect': {
-      freshFarm.eggsOnHand += event.qty;
-      resultMsg = `+${event.qty} eggs collected`;
-      break;
-    }
-    case 'egg-sell': {
-      if (event.qty > freshFarm.eggsOnHand) throw new Error(`Only ${freshFarm.eggsOnHand} eggs available`);
-      freshFarm.eggsOnHand -= event.qty;
-      freshFarm.totalEggsSold += event.qty;
-      const eggPrice = event.unitPrice || freshFarm.eggDefaultSalePrice;
-      const amount = event.qty * eggPrice;
-      transaction = { id: crypto.randomUUID(), date: new Date().toISOString(), type: 'revenue', amount, category: 'Sales', description: event.desc || `Sold ${event.qty} eggs @ ₱${eggPrice}` };
-      resultMsg = `+${event.qty} eggs sold (₱${amount.toFixed(2)})`;
-      break;
-    }
-    case 'duck-buy': {
-      const buyPrice = event.unitPrice || 0;
-      freshFarm.ducksCount += event.qty;
-      transaction = { id: crypto.randomUUID(), date: new Date().toISOString(), type: 'expense', amount: event.qty * buyPrice, category: 'Misc Expenses', description: event.desc || `Bought ${event.qty} ducks` };
-      resultMsg = `+${event.qty} ducks bought`;
-      break;
-    }
-    case 'duck-sell': {
-      if (event.qty > freshFarm.ducksCount) throw new Error(`Only ${freshFarm.ducksCount} ducks available`);
-      const duckPrice = event.unitPrice || freshFarm.duckDefaultSalePrice;
-      freshFarm.ducksCount -= event.qty;
-      transaction = { id: crypto.randomUUID(), date: new Date().toISOString(), type: 'revenue', amount: event.qty * duckPrice, category: 'Sales', description: event.desc || `Sold ${event.qty} ducks` };
-      resultMsg = `+${event.qty} ducks sold`;
-      break;
-    }
-    case 'duck-lost': {
-      if (event.qty > freshFarm.ducksCount) throw new Error(`Only ${freshFarm.ducksCount} ducks available`);
-      freshFarm.ducksCount -= event.qty;
-      resultMsg = `-${event.qty} ducks lost`;
-      break;
-    }
-    case 'feed-buy': {
-      freshFarm.feedKgRemaining += event.qty;
-      transaction = { id: crypto.randomUUID(), date: new Date().toISOString(), type: 'expense', amount: event.qty * (event.unitPrice || 0), category: 'Misc Expenses', description: event.desc || `Bought ${event.qty}kg feed` };
-      resultMsg = `+${event.qty}kg feed purchased`;
-      break;
-    }
-    case 'feed-use': {
-      if (event.qty > freshFarm.feedKgRemaining) throw new Error(`Only ${freshFarm.feedKgRemaining}kg feed available`);
-      freshFarm.feedKgRemaining -= event.qty;
-      resultMsg = `-${event.qty}kg feed used`;
-      break;
-    }
-    case 'duck-hatch': {
-      const totalEggs = event.qty + event.infertileCount;
-      if (totalEggs > freshFarm.eggsOnHand) throw new Error(`Only ${freshFarm.eggsOnHand} eggs available`);
-      freshFarm.eggsOnHand -= totalEggs;
-      freshFarm.ducksCount += event.qty;
-      resultMsg = `+${event.qty} ducklings hatched`;
-      break;
-    }
-    case 'expense-labor':
-    case 'expense-med':
-    case 'expense-transport': {
-      const catMap: Record<string, string> = { 'expense-labor': 'Labor', 'expense-med': 'Vitamins & Medicine', 'expense-transport': 'Transport Costs' };
-      transaction = { id: crypto.randomUUID(), date: new Date().toISOString(), type: 'expense', amount: event.qty, category: catMap[event.type] || 'Misc Expenses', description: event.desc || event.type.replace('expense-', '') };
-      resultMsg = `Expense ₱${event.qty} recorded`;
-      break;
-    }
-    default:
-      throw new Error('Unknown event type');
-  }
-
-  if (transaction) freshFarm.transactions.unshift(transaction);
-  await freshFarm.save();
-  cachedFarmId = null; // invalidate analytics cache
-
-  return resultMsg;
 }
 
 /**
- * POST /api/chat — sends a message to DeepSeek API with farm context
+ * Check if a message is purely a farm log (no question, no request for advice).
+ * Used to skip the DeepSeek API call and save credits.
+ */
+function isPureLogOnly(message: string): boolean {
+  const lower = message.toLowerCase();
+  const questionIndicators = [
+    /\?/, /how/, /what/, /why/, /when/, /where/, /should/, /can\s/i,
+    /tips?/, /advice/, /help/, /suggest/, /recommend/, /paano/, /bakit/,
+    /ano/, /saan/, /kailan/, /sino/, /tips?/, /payo/, /tulong/,
+  ];
+  return !questionIndicators.some((p) => p.test(lower));
+}
+
+/**
+ * POST /api/chat — sends a message to DeepSeek API with farm context.
+ * Also parses log events from the message and executes them before the AI call.
  * Body: { message: string }
  */
 router.post('/', async (req: Request, res: Response) => {
   try {
+    // ── Rate limit check ──
+    const ip = req.ip || req.socket.remoteAddress || 'unknown';
+    if (!checkRateLimit(ip)) {
+      res.status(429).json({ error: 'Too many requests. Please wait a moment.' });
+      return;
+    }
+
     const { message } = req.body;
     if (!message || typeof message !== 'string') {
       res.status(400).json({ error: 'Message is required' });
@@ -199,18 +80,51 @@ router.post('/', async (req: Request, res: Response) => {
       return;
     }
 
+    // ── Parse & execute log event (if message contains one) ──
+    const logEvent = parseLogMessage(message);
+    let logResult: string | null = null;
+
+    if (logEvent) {
+      const { result, error } = computeLogEvent(logEvent, farm.toObject() as FarmStateData);
+      if (error) {
+        logResult = `Error: ${error}`;
+      } else {
+        // Apply state changes
+        if (result.stateChanges) {
+          Object.assign(farm, result.stateChanges);
+        }
+        if (result.transaction) {
+          farm.transactions.unshift(result.transaction as any);
+        }
+        await farm.save();
+        logResult = result.message;
+      }
+    }
+
+    // ── Short-circuit: pure log message, skip AI call ──
+    if (logResult && !logResult.startsWith('Error') && isPureLogOnly(message)) {
+      res.json({
+        reply: `✅ Naitala ko na! ${logResult}. 🦆`,
+        farmChanged: true,
+      });
+      return;
+    }
+
+    // ── Build AI prompt ──
     const API_KEY = process.env.DEEPSEEK_API_KEY;
     if (!API_KEY) {
+      // If no AI key but we had a log result, still return it
+      if (logResult && !logResult.startsWith('Error')) {
+        res.json({ reply: `✅ ${logResult}`, farmChanged: true });
+        return;
+      }
       res.status(500).json({ error: 'DEEPSEEK_API_KEY is not configured on the server.' });
       return;
     }
 
     const a = getAnalytics(farm);
-
-    // Fetch farmer profile
     const profile = await FarmerProfile.findOne();
 
-    // Build system prompt with farm data + personal profile
     const personal = profile
       ? `${profile.farmerName} at ${profile.farmName}${profile.location ? ', ' + profile.location : ''}`
       : 'a duck farmer';
@@ -231,36 +145,21 @@ router.post('/', async (req: Request, res: Response) => {
       `Sold ${a.eggsSold} eggs all-time. ` +
       `Reply in Tagalog. Be friendly, use emojis. Give actionable advice. Do not use asterisks, markdown, or bullet points. Keep it short and conversational.`;
 
-    const model = process.env.DEEPSEEK_MODEL || 'deepseek-chat';
-    const url = 'https://api.deepseek.com/v1/chat/completions';
+    const logContext = logResult && !logResult.startsWith('Error')
+      ? `\n\nA farm event was just recorded: ${logResult}. Confirm this to the user in a friendly way.`
+      : '';
 
-    // Try to parse a log event from the message
-    const logEvent = parseLogMessage(message, farm);
-    let logResult: string | null = null;
-
-    if (logEvent) {
-      try {
-        logResult = await executeLogEvent(logEvent);
-      } catch (err) {
-        logResult = `Error: ${err instanceof Error ? err.message : 'Failed to log'}`;
-      }
-    }
-
-    // Build messages — include log result if one was processed
-    const logContext = logResult ? `\n\nA farm event was just recorded: ${logResult}. Confirm this to the user in a friendly way.` : '';
-    const userContent = `${logContext}\n\nQ: ${message}`;
-
-    const deepseekRes = await fetch(url, {
+    const deepseekRes = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${API_KEY}`,
       },
       body: JSON.stringify({
-        model,
+        model: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: userContent },
+          { role: 'user', content: `${logContext}\n\nQ: ${message}` },
         ],
         temperature: 0.5,
         max_tokens: 1500,
@@ -270,7 +169,12 @@ router.post('/', async (req: Request, res: Response) => {
     if (!deepseekRes.ok) {
       const errText = await deepseekRes.text();
       console.error('DeepSeek API error:', deepseekRes.status, errText);
-      res.status(502).json({ error: `DeepSeek API returned ${deepseekRes.status}: ${errText}` });
+      // Fallback: if log was processed, return a simple confirmation
+      if (logResult && !logResult.startsWith('Error')) {
+        res.json({ reply: `✅ ${logResult} (AI is temporarily unavailable)`, farmChanged: true });
+        return;
+      }
+      res.status(502).json({ error: `DeepSeek API returned ${deepseekRes.status}` });
       return;
     }
 

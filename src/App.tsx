@@ -8,6 +8,7 @@ import LedgerView from './components/ledger/LedgerView';
 import ChatView from './components/chat/ChatView';
 import LogModal from './components/modal/LogModal';
 import AdminPage from './components/admin/AdminPage';
+import ErrorBoundary from './components/layout/ErrorBoundary';
 
 function MainLayout() {
   const [activeView, setActiveView] = useState<ViewId>('dashboard');
@@ -56,10 +57,12 @@ function MainLayout() {
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<MainLayout />} />
-      <Route path="/admin" element={<AdminPage />} />
-    </Routes>
+    <ErrorBoundary>
+      <Routes>
+        <Route path="/" element={<MainLayout />} />
+        <Route path="/admin" element={<AdminPage />} />
+      </Routes>
+    </ErrorBoundary>
   );
 }
 
