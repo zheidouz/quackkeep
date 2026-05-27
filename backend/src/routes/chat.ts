@@ -182,7 +182,7 @@ async function executeLogEvent(event: LogEventData): Promise<string> {
 }
 
 /**
- * POST /api/chat — sends a message to Google Gemini API with farm context
+ * POST /api/chat — sends a message to DeepSeek API with farm context
  * Body: { message: string }
  */
 router.post('/', async (req: Request, res: Response) => {
@@ -199,9 +199,9 @@ router.post('/', async (req: Request, res: Response) => {
       return;
     }
 
-    const API_KEY = process.env.GEMINI_API_KEY;
+    const API_KEY = process.env.DEEPSEEK_API_KEY;
     if (!API_KEY) {
-      res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server.' });
+      res.status(500).json({ error: 'DEEPSEEK_API_KEY is not configured on the server.' });
       return;
     }
 
@@ -231,8 +231,8 @@ router.post('/', async (req: Request, res: Response) => {
       `Sold ${a.eggsSold} eggs all-time. ` +
       `Reply in Tagalog. Be friendly, use emojis. Give actionable advice. Do not use asterisks, markdown, or bullet points. Keep it short and conversational.`;
 
-    const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-    const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${API_KEY}`;
+    const model = process.env.DEEPSEEK_MODEL || 'deepseek-chat';
+    const url = 'https://api.deepseek.com/v1/chat/completions';
 
     // Try to parse a log event from the message
     const logEvent = parseLogMessage(message, farm);
@@ -246,28 +246,36 @@ router.post('/', async (req: Request, res: Response) => {
       }
     }
 
-    // Build prompt — include log result if one was processed
+    // Build messages — include log result if one was processed
     const logContext = logResult ? `\n\nA farm event was just recorded: ${logResult}. Confirm this to the user in a friendly way.` : '';
-    const fullPrompt = `${systemPrompt}${logContext}\n\nQ: ${message}`;
+    const userContent = `${logContext}\n\nQ: ${message}`;
 
-    const geminiRes = await fetch(url, {
+    const deepseekRes = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${API_KEY}`,
+      },
       body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
-        generationConfig: { temperature: 0.5, maxOutputTokens: 1500 },
+        model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userContent },
+        ],
+        temperature: 0.5,
+        max_tokens: 1500,
       }),
     });
 
-    if (!geminiRes.ok) {
-      const errText = await geminiRes.text();
-      console.error('Gemini API error:', geminiRes.status, errText);
-      res.status(502).json({ error: `Gemini API returned ${geminiRes.status}: ${errText}` });
+    if (!deepseekRes.ok) {
+      const errText = await deepseekRes.text();
+      console.error('DeepSeek API error:', deepseekRes.status, errText);
+      res.status(502).json({ error: `DeepSeek API returned ${deepseekRes.status}: ${errText}` });
       return;
     }
 
-    const data = await geminiRes.json() as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
-    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not generate a response.';
+    const data = await deepseekRes.json() as { choices?: { message?: { content?: string } }[] };
+    const reply = data?.choices?.[0]?.message?.content || 'Sorry, I could not generate a response.';
 
     res.json({ reply, farmChanged: !!logResult });
   } catch (err) {
