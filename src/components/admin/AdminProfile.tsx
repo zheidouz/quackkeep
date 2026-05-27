@@ -145,12 +145,19 @@ export default function AdminProfile() {
 
         {Object.entries(profile.customFields || {}).map(([key, value]) => (
           <div key={key} className="flex items-center gap-2 mb-2">
-            <span className="text-xs font-bold text-homestead-green bg-homestead-beige/50 px-2 py-1.5 rounded-lg border border-homestead-green/30 min-w-[80px]">
+            <span className="text-xs font-bold text-homestead-green bg-homestead-beige/50 px-2 py-1.5 rounded-lg border border-homestead-green/30 min-w-[80px] shrink-0">
               {key}
             </span>
-            <span className="flex-1 text-sm text-homestead-green bg-white px-3 py-1.5 rounded-lg border border-homestead-green/30 truncate">
-              {value}
-            </span>
+            <input
+              value={value}
+              onChange={(e) =>
+                setProfile((prev) => ({
+                  ...prev,
+                  customFields: { ...prev.customFields, [key]: e.target.value },
+                }))
+              }
+              className="flex-1 text-sm text-homestead-green bg-white px-3 py-1.5 rounded-lg border border-homestead-green/30 focus:outline-none focus:border-homestead-green"
+            />
             <button
               type="button"
               onClick={() => removeCustomField(key)}
