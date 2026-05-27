@@ -22,7 +22,6 @@ export default function PinModal({ open, mode, onSuccess, onClose }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [pin, setPin] = useState(['', '', '', '']);
   const [error, setError] = useState('');
-  const [currentPin, setCurrentPin] = useState(['', '', '', '']);
   const [step, setStep] = useState<'current' | 'new' | 'confirm'>('current');
   const [newPin, setNewPin] = useState('');
   const inputRefs = useRef<(HTMLInputElement | null)[]>([null, null, null, null]);
@@ -42,7 +41,6 @@ export default function PinModal({ open, mode, onSuccess, onClose }: Props) {
   const resetState = () => {
     setPin(['', '', '', '']);
     setError('');
-    setCurrentPin(['', '', '', '']);
     setStep('current');
     setNewPin('');
   };
@@ -101,7 +99,6 @@ export default function PinModal({ open, mode, onSuccess, onClose }: Props) {
     } else if (mode === 'change') {
       if (step === 'current') {
         if (enteredPin === getStoredPin()) {
-          setCurrentPin(['', '', '', '']);
           setPin(['', '', '', '']);
           setStep('new');
           setTimeout(() => inputRefs.current[0]?.focus(), 50);
