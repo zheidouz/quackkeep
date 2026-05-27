@@ -5,10 +5,10 @@ import Header from './components/layout/Header';
 import BottomNav from './components/layout/BottomNav';
 import DashboardView from './components/dashboard/DashboardView';
 import LedgerView from './components/ledger/LedgerView';
-import ChatView from './components/chat/ChatView';
 import LogModal from './components/modal/LogModal';
 import AdminPage from './components/admin/AdminPage';
 import ErrorBoundary from './components/layout/ErrorBoundary';
+import ChatHead from './components/chat/ChatHead';
 
 function MainLayout() {
   const [activeView, setActiveView] = useState<ViewId>('dashboard');
@@ -20,8 +20,6 @@ function MainLayout() {
         return <DashboardView />;
       case 'ledger':
         return <LedgerView />;
-      case 'chat':
-        return <ChatView />;
     }
   };
 
@@ -51,6 +49,7 @@ function MainLayout() {
       />
 
       <LogModal open={modalOpen} onClose={() => setModalOpen(false)} />
+      <ChatHead />
     </div>
   );
 }

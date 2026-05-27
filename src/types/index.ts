@@ -35,7 +35,7 @@ export interface ChatMessage {
   timestamp: number;
 }
 
-export type ViewId = 'dashboard' | 'ledger' | 'recalibrate' | 'chat';
+export type ViewId = 'dashboard' | 'ledger' | 'recalibrate';
 
 export type LogEventType =
   | 'egg-collect'
