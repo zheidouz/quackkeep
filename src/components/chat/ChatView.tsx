@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import type { ChatMessage } from '../../types';
 import { sendChatMessage } from '../../services/chat';
 import { useFarm } from '../../context/FarmContext';
+import DuckIcon from './DuckIcon';
 
 const SUGGESTIONS = [
   'How much feed should I order for next month?',
@@ -22,8 +23,8 @@ function ChatBubble({ msg }: { msg: ChatMessage }) {
         }`}
       >
         {!isUser && (
-          <span className="text-xs font-bold text-homestead-terracotta block mb-1">
-            🦆 QuackKeep AI
+          <span className="text-xs font-bold text-homestead-terracotta block mb-1 flex items-center gap-1">
+            <DuckIcon size={14} /> QuackKeep AI
           </span>
         )}
         <p className="whitespace-pre-wrap">{msg.text}</p>

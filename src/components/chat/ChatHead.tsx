@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import type { ChatMessage } from '../../types';
 import { sendChatMessage } from '../../services/chat';
 import { useFarm } from '../../context/FarmContext';
+import DuckIcon from './DuckIcon';
 
 const SUGGESTIONS = [
   'How much feed should I order for next month?',
@@ -22,8 +23,8 @@ function ChatBubble({ msg }: { msg: ChatMessage }) {
         }`}
       >
         {!isUser && (
-          <span className="text-[10px] font-bold text-homestead-terracotta block mb-0.5">
-            🦆 QuackKeep AI
+          <span className="text-[10px] font-bold text-homestead-terracotta block mb-0.5 flex items-center gap-0.5">
+            <DuckIcon size={12} /> QuackKeep AI
           </span>
         )}
         <p className="whitespace-pre-wrap">{msg.text}</p>
@@ -138,10 +139,10 @@ export default function ChatHead() {
       {/* Chathead button — floating above the bottom nav */}
       <button
         onClick={() => setIsOpen((prev) => !prev)}
-        className="fixed bottom-20 right-4 z-40 w-14 h-14 bg-homestead-green text-white rounded-full shadow-2xl flex items-center justify-center text-2xl hover:scale-110 active:scale-95 transition-all border-2 border-homestead-beige cursor-pointer"
+        className="fixed bottom-20 right-4 z-40 w-14 h-14 bg-homestead-green text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all border-2 border-homestead-beige cursor-pointer"
         aria-label={isOpen ? 'Close chat' : 'Open AI chat'}
       >
-        {isOpen ? '✕' : '🦆'}
+        {isOpen ? '✕' : <DuckIcon size={36} />}
       </button>
 
       {/* Backdrop (visible only when open) */}
@@ -168,7 +169,7 @@ export default function ChatHead() {
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-homestead-green/20 bg-homestead-green text-homestead-beige rounded-t-2xl">
           <div className="flex items-center gap-2">
-            <span className="text-lg">🦆</span>
+            <DuckIcon size={22} />
             <div>
               <span className="text-sm font-bold">QuackKeep AI</span>
               <span className="text-[10px] block opacity-70">Ask anything about your farm</span>
